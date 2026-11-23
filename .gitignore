@@ -1,0 +1,11 @@
+# OS and editor files
+.DS_Store
+Thumbs.db
+
+# Secrets and per-developer Claude Code settings
+.env*
+.claude/settings.local.json
+CLAUDE.local.md
+
+# Dependencies (some skills ship a package.json)
+node_modules/
