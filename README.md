@@ -42,7 +42,7 @@ Every doc goes in `.claude/docs/`, including the ones the skills write (`SPEC.md
 | `DESIGN.md` | The design system: tokens, type, components and UI rules. |
 | `RULES.md` | The project's own rules. Loads in every session. |
 | `MEMORY.md` | Gotchas, quirks and decisions the code doesn't show. Loads in every session. |
-| `TASKS.md` | The record of delivered work and hours that goes to the client. |
+| `TASKS.md` | The record of delivered work and hours. |
 
 They start empty, apart from the header and total in `TASKS.md`. Claude appends one entry per finished task and keeps the total up to date:
 
@@ -67,8 +67,6 @@ Category: Payments, Hours: 10 hours
 | [multica-ai/andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills) | 1 | `karpathy-guidelines`, the four coding principles | MIT |
 
 The Prisma, Better Auth, Shopify, React and PHP skills only matter on those stacks. Remove the ones a project doesn't use with `npx skills remove <name> -y`.
-
-The two Shopify skills report each use to Shopify (`shopify.dev/mcp/usage`), including your latest prompt. To turn that off, set `OPT_OUT_INSTRUMENTATION=true` or create an empty file at `~/.config/shopify-ai-toolkit/opt-out`. `ucp` does nothing until the UCP CLI is installed (`npm install -g @shopify/ucp-cli`).
 
 ## Add it to a project
 

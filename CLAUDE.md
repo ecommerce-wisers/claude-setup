@@ -30,7 +30,7 @@ Read the others when the task needs them:
 - `.claude/docs/PRD.md`: what the product is, who it's for, the scope and what's out of scope. Read it before planning a feature.
 - `.claude/docs/ARCHITECTURE.md`: how the code is organised, the data flow, the integrations and the decisions behind them. Read it before changing structure, data models or dependencies.
 - `.claude/docs/DESIGN.md`: the design system (tokens, type, components, UI rules). Read it before any UI work.
-- `.claude/docs/TASKS.md`: the record of delivered work and hours, which goes to the client. Log each finished task there (see Log finished work below).
+- `.claude/docs/TASKS.md`: the record of delivered work and hours. Log each finished task there (see Log finished work below).
 
 `.claude/references/` holds the material the user supplies: designs, mockups, screenshots, client briefs, API notes and other explanations. Before UI work, look for the matching design there along with `DESIGN.md`. When a task, doc or the user points to a reference, read it before you start. When a reference and a doc disagree, ask which one is right. Treat the folder as read-only: don't edit, rename or delete files in it.
 
@@ -76,7 +76,7 @@ This covers docs, commit messages, pull request descriptions, code comments and 
 - The task is logged in `TASKS.md`, and the other docs still match the code.
 
 ## Log finished work in TASKS.md
-`TASKS.md` is the project's record of work and hours, and it goes to the client. When you finish a piece of project work, log it in the same turn, before you report back.
+`TASKS.md` is the project's record of work and hours. When you finish a piece of project work, log it in the same turn, before you report back.
 
 Only project work goes in: features, pages, design, fixes, backend, integrations, tests, research and code reviews. Never log documentation work, such as writing `CLAUDE.md`, the docs, rules, plans or notes. When a task included some documentation, log the project part only. A question answered in chat isn't a task.
 
