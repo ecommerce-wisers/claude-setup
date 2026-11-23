@@ -52,7 +52,7 @@ The skills in `.claude/skills/` are recorded in `skills-lock.json`.
 - Start with `using-agent-skills`. It maps a task to its workflow (interview, spec, plan, build, test, review, ship) and to the skill for each step. Follow that skill's steps, including its checks and the points where the user reviews.
 - The stack skills apply only when the project uses that stack: `prisma-*` for Prisma, the Better Auth set (`better-auth-*`, `create-auth`, `email-and-password-best-practices`, `organization-best-practices`, `two-factor-authentication-best-practices`), `shopify` and `ucp` for Shopify, `php-pro` for PHP and `vercel-react-best-practices` for React and Next.js.
 - When a skill's advice conflicts with this file or `RULES.md`, this file and `RULES.md` win.
-- Add skills at project level, so they land here and in the lock file: `npx skills add <owner/repo> --skill <name> -a claude-code`. Don't use `-g`, which installs for your user account instead of the repo. `npx skills experimental_install` restores the locked set and `npx skills update` updates it.
+- Add skills at project level, so they land here and in the lock file: `npx skills add <owner/repo> --skill <name> -a claude-code`. Don't use `-g`, which installs for your user account instead of the repo. `npx skills update -p` updates them and `npx skills remove <name> -y` removes one.
 
 ## Git
 - Commit only when the user asks. Push, open or merge a pull request only when asked.
