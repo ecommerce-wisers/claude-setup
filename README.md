@@ -101,14 +101,13 @@ Then:
 The skills are committed, so a clone already has them.
 
 ```sh
-npx skills update -p                                             # update the project's skills to their latest versions
-npx skills add <owner/repo> --skill <name> -a claude-code -y     # add a skill to this project
+npx skills add <owner/repo> --skill <name> -a claude-code -y     # add a skill, or update one to its latest version
 npx skills remove <name> -y                                      # remove a skill and its lock entry
 ```
 
 Always add skills with `-a claude-code` and without `-g`, so they land in `.claude/skills/` and the lock file rather than in your user account.
 
-`npx skills experimental_install` can restore the set from `skills-lock.json`, but it puts the files in `.agents/skills/` and symlinks them into `.claude/skills/`. To get real copies, the way this repo has them, install the whole set from scratch instead:
+Don't use `npx skills update` or `npx skills experimental_install`. Both put the files in `.agents/skills/` and leave symlinks in `.claude/skills/` instead of the real copies this repo keeps. To update everything, rerun the commands below. Each one replaces the copies and moves the lock entries to the latest commit. The same commands install the whole set from scratch:
 
 ```sh
 npx skills add addyosmani/agent-skills --skill '*' -a claude-code -y
