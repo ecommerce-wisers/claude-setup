@@ -44,7 +44,7 @@ Docs say `move( dest: number, index: number, prev: number ): void`; source says 
 
 Steps:
 
-1. In loop mode, if `dest !== index` and there is room, the list is first shifted by one slider length so the move can continue seamlessly through the clones. This emits the internal `sh` event.
+1. In loop mode, if `dest !== index` and there is room, the list is first shifted by one slider length so the move can continue seamlessly through the clones. This shift uses `translate( position, true )`, so it does not emit the internal `sh` event (tested: `go( '<' )` from slide 0 of a loop carousel emits no `sh`).
 2. Sets the state to `MOVING` (`Splide.STATES.MOVING`, 4) and emits `move( index, prev, dest )`.
 3. Calls `Components.Transition.start( index, done )`. When the transition ends, the state becomes `IDLE` (3), then `moved( index, prev, dest )` is emitted, then `callback` runs.
 

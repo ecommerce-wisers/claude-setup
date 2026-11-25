@@ -234,7 +234,7 @@ The track does not have to be a direct child of the root. To get arrows "outside
 
 ## Styling
 
-### Theme CSS (`splide.min.css` 4.1.4, verbatim rules)
+### Theme CSS (`splide.min.css` 4.1.4, verbatim rules without the `-ms-` prefixed declarations)
 
 ```css
 .splide__arrow{align-items:center;background:#ccc;border:0;border-radius:50%;cursor:pointer;display:flex;height:2em;justify-content:center;opacity:.7;padding:0;position:absolute;top:50%;transform:translateY(-50%);width:2em;z-index:1}
@@ -393,7 +393,7 @@ splide.mount();
 
 | Property | Type | Description |
 |---|---|---|
-| `arrows` | `{ prev?: HTMLButtonElement, next?: HTMLButtonElement }` | The previous and next buttons, whether you supplied them in HTML or Splide generated them. The object is empty when arrows are disabled. |
+| `arrows` | `{ prev?: HTMLButtonElement, next?: HTMLButtonElement }` | The previous and next buttons, whether you supplied them in HTML or Splide generated them. It is empty only when `arrows` is `false` at mount and the HTML has no buttons. HTML buttons stay in it even with `arrows: false`, and after a runtime switch to `arrows: false` it still holds the removed generated buttons (the object is never cleared). |
 
 `splide.Components.Elements` also exposes `arrows` (the wrapper), `prev` and `next` as they were found in the HTML at mount time. Generated buttons appear only in `Arrows.arrows`.
 
@@ -406,7 +406,7 @@ Splide never finds buttons outside the root. Set `arrows: false` and drive the c
 | `splide.go( '<' )` | Previous page or destination. Respects `perPage`, `perMove` and `focus`. |
 | `splide.go( '>' )` | Next page or destination. |
 | `splide.go( '-1' )` / `splide.go( '+1' )` | Previous or next slide by index. |
-| `splide.go( '>2' )` | Page 2. |
+| `splide.go( '>2' )` | Page index 2, the third page (page indexes start at 0). With `perPage: 3` that is slide index 6. |
 
 To keep the buttons accessible, give them `aria-controls` (the track id), a label, and a `disabled` state that follows the carousel. The recipe below copies the built-in logic:
 

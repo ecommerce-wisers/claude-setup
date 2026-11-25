@@ -253,7 +253,7 @@ The target element must exist when the constructor runs. If the script is in `<h
 </script>
 ```
 
-Register `mounted`, `ready`, `arrows:mounted`, `pagination:mounted` and `navigation:mounted` listeners **between** the constructor and `mount()`. Listeners added after `mount()` never fire for these.
+Register `mounted`, `ready`, `arrows:mounted`, `pagination:mounted` and `navigation:mounted` listeners **between** the constructor and `mount()`. Listeners added after `mount()` miss the first emission. `mounted` and `ready` don't fire again. `arrows:mounted` fires again after each `splide.options = { ... }` update, and `pagination:mounted` after each update or `refresh()`.
 
 ```js
 var splide = new Splide( '.splide' );
@@ -401,7 +401,7 @@ document.querySelectorAll( '.splide' ).forEach( function ( el ) {
 Notes:
 
 - Per-carousel options: use different constructor options per element, or a `data-splide` attribute on each root (section 8).
-- Nested carousels (a `.splide` inside a slide of another `.splide`): `querySelectorAll( '.splide' )` returns both, and each gets its own instance. Splide ignores elements that belong to a nested carousel. It looks up track, arrows, pagination, progress bar and toggle only where `closest( '.splide' )` is the instance's own root.
+- Nested carousels (a `.splide` inside a slide of another `.splide`): `querySelectorAll( '.splide' )` returns both, and each gets its own instance. Splide ignores elements that belong to a nested carousel. It looks up track, arrows, pagination, progress bar and toggle only where `closest( '.splide' )` is the instance's own root. Only the first match of each selector is checked, so if a nested carousel mounts first, the parent's placeholders after its track are ignored (see `structure.md`).
 - Each root without an `id` gets `splide01`, `splide02`, and so on, in creation order. Track, list and slide IDs derive from it. See `structure.md`.
 - Mount the main carousel and the thumbnails as separate instances. Call `main.sync( thumbs )` before both `mount()` calls.
 

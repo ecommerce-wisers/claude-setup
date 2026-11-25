@@ -86,7 +86,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 } );
 ```
 
-With `heightRatio`, Splide sets the slide height to the slide width multiplied by the ratio. A 1000px-wide slide becomes 500px tall (`1000 * 0.5`). The images then cover their slides. The other ways to give slides a height are `height` (a fixed CSS length, not `%`) and `fixedHeight`.
+With `heightRatio`, Splide sets the slide height to the carousel (list) width multiplied by the ratio, not the slide width. With one slide per page, a 1000px-wide slide becomes 500px tall (`1000 * 0.5`). With `perPage: 2` the slides are 500px wide and still 500px tall. The images then cover their slides. The other ways to give slides a height are `height` (a fixed CSS length, not `%`) and `fixedHeight`.
 
 Verified: in the 4.x source (`Layout`), `heightRatio` is calculated from the width of the list element and applied to every slide (or to `.splide__slide__container` if there is one). It is recalculated on resize.
 
@@ -312,7 +312,7 @@ Verified in headless Chrome against 4.1.4 from the CDN. At a 1200px window, the 
   ```
 - **Responsive images:** the normal `srcset`/`sizes` attributes work on slide images. With `lazyLoad`, use `data-splide-lazy-srcset`.
 - **Card carousel spacing and peeking:** `gap: '1rem'` separates the cards. `padding: { left: '2rem', right: '2rem' }` (or `padding: '10%'`) shows part of the neighbouring cards. Both go in `breakpoints` too.
-- **Mobile-first breakpoints:** `mediaQuery: 'min'` with `perPage: 1, breakpoints: { 640: { perPage: 2 } }` gives the same result, written mobile-first.
+- **Mobile-first breakpoints:** `mediaQuery: 'min'` with `perPage: 1, breakpoints: { 641: { perPage: 2 } }` gives the same result, written mobile-first. Use `641`, not `640`: `(min-width: 640px)` also matches at exactly 640px, so that width would show 2 cards instead of 1.
 - **Looping and autoplay:** `type: 'loop'` (`rewind` has no effect in loop), `autoplay: true`, `interval: 5000`. Add a play/pause toggle when autoplaying (see `references/autoplay.md`).
 - **Fullscreen page:** remove the body margin and crop the images:
   ```html

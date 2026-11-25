@@ -112,7 +112,7 @@ new Splide( '#splide', {
 |---|---|---|---|
 | `rows` | `number` | `1` | The number of rows. |
 | `cols` | `number` | `1` | The number of columns. |
-| `dimensions` | `[ number, number ][]` | `[]` | Dimensions (rows, cols) for each page, as an array. With `[ [ 1, 1 ], [ 2, 2 ] ]` the first slide (page) is 1×1 and all the following ones are 2×2: the last entry repeats. When this option is set, the extension ignores `rows` and `cols`. A `0` or missing number counts as `1`. |
+| `dimensions` | `[ number, number ][]` | `[]` | Dimensions (rows, cols) for each page, as an array. With `[ [ 1, 1 ], [ 2, 2 ] ]` the first slide (page) is 1×1 and all the following ones are 2×2: the last entry repeats. When this option is set, the extension ignores `rows` and `cols`. A `0` or missing number counts as `1` when the slides are grouped, but the layout divides by the raw value, so those cells get no width (or the rows no height). Checked: `[ [ 2, 0 ] ]` grouped two cells per page, and the cells had no `width` style. Always give both numbers. |
 | `gap` | `{ row?: number \| string, col?: number \| string }` | `{}` | Gaps between rows and between columns. CSS relative units are accepted; a number means px. |
 
 The grid is built only when `grid` is truthy and `rows > 1`, `cols > 1` or `dimensions` is a non-empty array. `grid: false` turns it off.
@@ -278,13 +278,14 @@ The demo's 19 items fill 1+4+2+2+4+6 = 19 cells, so it builds 6 pages. The code 
 
 - **Height.** Row heights are percentages of the page (slide) height. Set `height` (the official demo uses `'14rem'`), `heightRatio` or `fixedHeight`, or the rows collapse to their content.
 - **Everything counts pages.** `splide.length`, `splide.index`, `perPage`, `perMove`, `start`, `go()`, pagination, arrows, and `active`/`visible` events all refer to generated pages. The official demo uses `perPage: 2`, meaning two pages side by side. In Chrome, the demo builds 6 pages from 19 items above 640px and 7 pages below.
-- In a `refresh` handler that you registered before `mount()`, `splide.length` still holds the old count, because it runs before core re-collects the slides. Read it after `mount()` returns, or in a later event such as `move`.
+- In a `refresh` handler that you registered before `mount()`, `splide.length` is still the number of original slides, not the page count, because it runs before core re-collects the slides. Checked with the demo: 19 at mount and 19 again after the 640px breakpoint rebuilt 7 pages. Read it after `mount()` returns, or in a later event such as `move`.
 - **`cover: true`** makes each cell's `<img>` (or the `<img>` inside the cell's `.splide__slide__container`) a `center/cover` background and hides the image. Grid restores this when it is destroyed.
+- **Inline styles on slides are lost.** When Grid rebuilds (on every `updated`, including breakpoint changes) or is destroyed, it removes the whole `style` attribute of every cell and row (`Layout.ts` `destroy()`: `removeAttribute( colSlide, 'style' )`). A `style="..."` written on a slide survives the first build but not the first rebuild (checked: the slides' `background` was gone after `splide.options = { grid: { rows: 2, cols: 2 } }`). Style an inner element or use a class.
 - **`slideFocus`** gives every cell `tabindex="0"` while its page is visible and removes it when the page is hidden.
 - **`add()`/`remove()`** act on pages. A slide inserted with `splide.add()` becomes its own page, not a cell. To change the cells, destroy the carousel, edit the markup and mount again, or toggle `grid` off and on.
 - **Other extensions.**
   - URL Hash: put `data-splide-hash` on the cells and it never matches. URL Hash also resolves the start index before Grid groups the slides.
-  - Video: `data-splide-*` attributes on cells are ignored, because both extensions read attributes from real slides only.
+  - Video: it depends on the mount order. With `{ Grid, Video }`, Video sees only the generated pages, so `data-splide-*` attributes on cells are ignored. With `{ Video, Grid }`, Video creates players on the original slides before Grid moves them, so clicking a cell plays its video (checked), but `Video.play( index )` doesn't reach them.
   - Prefer the selective mount, so neither runs on a grid carousel.
 - **`direction: 'ttb'`.** The column gap goes through `Direction.resolve( 'marginRight' )`, which in TTB becomes `margin-bottom`, so cells in a row get a bottom margin instead of a horizontal gap. Use `gap.col: 0` and space the cells with your own CSS.
 - `type: 'loop'` works: the clones are copies of whole pages.

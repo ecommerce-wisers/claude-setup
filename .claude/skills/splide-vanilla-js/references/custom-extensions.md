@@ -263,7 +263,7 @@ Core components and their public members (from `components/*/*.ts`):
 | `Layout` | `listSize()`, `slideSize( index, withoutGap? )`, `sliderSize( withoutGap? )`, `totalSize( index?, withoutGap? )`, `getPadding( right )`, `isOverflow()`, `resize( force? )` |
 | `Clones` | none |
 | `Move` | `move( dest, index, prev, callback? )`, `jump( index )`, `translate( position, preventLoop? )`, `shift( position, backwards )`, `cancel()`, `toIndex( position )`, `toPosition( index, trimming? )`, `getPosition()`, `getLimit( max )`, `exceededLimit( max?, position? )`. `reposition()` is internal. |
-| `Controller` | `go( control, allowSameIndex?, callback? )`, `scroll( destination, duration?, snap?, callback? )`, `getNext( destination? )`, `getPrev( destination? )`, `getEnd()`, `setIndex( index )`, `getIndex( prev? )`, `toIndex( page )`, `toPage( index )`, `toDest( position )`, `hasFocus()`, `isBusy()` |
+| `Controller` | `go( control, allowSameIndex?, callback? )`, `scroll( destination, duration?, snap?, callback? )`, `getNext( destination? )`, `getPrev( destination? )`, `getAdjacent( prev, destination? )`, `getEnd()`, `setIndex( index )`, `getIndex( prev? )`, `toIndex( page )`, `toPage( index )`, `toDest( position )`, `hasFocus()`, `isBusy()` |
 | `Arrows` | `arrows` (`{ prev?, next? }`), `update()` |
 | `Autoplay` | `play()`, `pause()`, `isPaused()` |
 | `Cover` | none |
@@ -299,13 +299,14 @@ The object your extension receives is built as `Object.create( mergedOptions )`:
 - The **prototype** holds the base options.
 - **Own properties** hold the overrides from the currently matching breakpoints, plus `reducedMotion` when the media query matches. When the matching breakpoints change, `Media` deletes all own properties and merges the matching breakpoint options in again (deep-merged over the base value), then emits `updated`.
 - `splide.options = { ... }` merges into both the own properties and the prototype, then emits `updated` with the options.
-- Splide's merge copies plain objects recursively, copies arrays with `slice()`, and replaces any other value.
+- Splide's merge copies every non-null, non-array object recursively into a new plain object (own enumerable keys only), copies arrays with `slice()`, and replaces any other value, functions included.
 
 Rules that follow from this:
 
+- **Don't put DOM elements, `Date`s or class instances in options.** The merge turns them into plain-object copies: a `<button>` passed as `myExt: { el: button }` arrived as `{}`, in the constructor and through the `options` setter (verified). Pass a selector or id, or a function that returns the element (functions are kept as is).
 - **Read options when you need them, not once in the constructor.** `options.slideCounter` read inside `render()` reflects the breakpoint that applies now. A value cached in the constructor goes stale. Re-render on `updated`.
 - Breakpoint options merge over the base, so `{ slideCounter: { format } }` in a breakpoint keeps the base `pages` value.
-- **Merge your defaults yourself.** Splide's `merge` utility is not exported by either build.
+- **Merge your defaults yourself, or import `merge` from the utils build.** The ESM and UMD builds don't export Splide's `merge`. The separate ESM file `https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/utils/splide-utils.esm.js` does (7 kB unminified, no imports; verified: `merge( {}, DEFAULTS, value )` deep-merged and left `DEFAULTS` untouched). There is no classic-script form of it.
 
 Defaults via a shallow merge, which is enough for flat option objects:
 
@@ -1257,6 +1258,8 @@ Classic: `persistentListeners` and `rememberIndex` are the same code, because th
 
 Verified (classic and ESM): at index 3, narrowing below 700px destroyed the slider, and clicking `.my-next` did nothing. Widening remounted it at index 3 with the right slide and pagination page active and the list translated to slide 3. After that, `.my-next` moved to 4 and the persistent `moved` handler fired.
 
+**Don't call `go()` on a destroyed slider.** `ExternalControls` avoids it because its listeners are removed on every destroy. Verified: `splide.go( 2 )` while the `destroy: true` breakpoint matched set the index to 2, put `transform: translateX(0px)` on the list, and set the state from `DESTROYED` back to `IDLE` (the transition's `done` ran). On widening, `Media` saw no destroyed state and never remounted: no `is-active`, no arrows. Code outside an extension should check `splide.state.is( Splide.STATES.DESTROYED )` first.
+
 Use `destroy( completely )` when an extension must behave differently on a final destroy, for example to remove UI that should stay visible while breakpoints have the slider destroyed:
 
 ```js
@@ -1274,12 +1277,14 @@ function destroy( completely ) {
 ## Pitfalls checklist
 
 - Read `options.*` when you need it. Re-render on `updated`.
+- Don't pass DOM elements or other non-plain objects in options: the merge copies them into plain objects. Pass selectors or functions.
 - Read `Slides.get()`, `Arrows.arrows` and `Components.Transition` in `mount()` or later, not in the constructor.
 - Namespace every `splide.on` in classic scripts (`'move.myExt'`). `splide.off( 'move' )` only removes un-namespaced handlers.
 - `off()` can't remove one particular callback. Use a namespace or a separate `EventInterface` object.
 - Remove every DOM node, timer, observer and manual `addEventListener` in `destroy()`. It runs on breakpoint destroys too.
 - Remounts construct new instances. Keep state that must persist in a factory closure.
 - Register handlers inside an extension if they must survive breakpoint destroys.
+- Don't call `splide.go()` while the slider is destroyed: it resets the state to `IDLE` and breakpoints then never remount it.
 - Only use core component names on purpose (to replace one), and implement the API other components use.
 - A `Transition` key in the extensions object is ignored. Pass a transition as the second argument to `mount()`.
 - ESM needs http(s) and one consistent CDN URL. Don't load the UMD and ESM builds together.

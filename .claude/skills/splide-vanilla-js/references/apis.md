@@ -474,6 +474,8 @@ Return: `this`
 
 **(source)** It only emits `refresh`. In response, Elements re-collects the slides from the DOM (direct `.splide__slide` children of the list, clones excluded), Slides re-registers them (new IDs, labels and roles), Clones regenerates the clones, Pagination rebuilds, Arrows update, Layout re-measures and Move repositions. So `refresh()` also picks up slides you inserted into or removed from the list with plain DOM methods.
 
+**(source)** Do not call it while the carousel is moving. Elements strips the list's inline `style`, including the `transition`, so `transitionend` never fires: `moved` is not emitted, the state stays `MOVING`, and `aria-hidden` is not updated until the next move ends (tested: `go( '>' )` followed by `refresh()` left `state.is( IDLE )` false after one second). `add()` and `remove()` refresh too, which is why the docs warn against calling them during a move.
+
 ### `destroy()`
 
 `destroy( completely?: boolean ): this`

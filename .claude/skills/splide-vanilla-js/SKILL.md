@@ -116,11 +116,11 @@ Every option with type, default, notes and examples: `references/options.md`.
 | `gap`, `padding` | — | CSS units; padding `{ left, right }` or `{ top, bottom }` |
 | `focus` | — | number or `'center'` |
 | `trimSpace` | `true` | `false` / `'move'` |
-| `omitEnd` | `false` | v4.1+; needs `type: 'slide'` + `focus` |
+| `omitEnd` | `false` | v4.1+. Docs say it needs `type: 'slide'` + `focus`; without `focus` the end arrow is still disabled but the dots aren't trimmed |
 | `start` | `0` | |
 | `rewind`, `rewindByDrag` | `false` | not for loop |
 | `speed` / `rewindSpeed` | `400` / `speed` | ms |
-| `width`, `height`, `heightRatio` | — | height: no `%` |
+| `width`, `height`, `heightRatio` | — | height: no `%`; `heightRatio` multiplies the list width, not the slide width |
 | `fixedWidth`, `fixedHeight` | — | override `perPage` for layout only; `perPage` still sets the step and the page count |
 | `autoWidth`, `autoHeight` | `false` | keep perPage/perMove = 1 |
 | `direction` | `'ltr'` | `'rtl'`, `'ttb'` (ttb needs `height` or `heightRatio`) |
@@ -202,7 +202,7 @@ Every event, including internal ones from the source, with argument types: `refe
 | `pagination:updated` | `data, prev, curr` |
 | `navigation:mounted` | `splides`: array of `{ splide, isParent? }`, not bare instances |
 | `autoplay:play`, `autoplay:pause` | — |
-| `autoplay:playing` | `rate` 0–1 |
+| `autoplay:playing` | `rate` 0–1; also fires once with `0` on every rewind (move, scroll, refresh), even while paused |
 | `lazyload:loaded` | `img, Slide` |
 
 All handlers are removed on destroy. If `destroy` is used in breakpoints, re-bind via an extension, because its `mount()` runs again on remount.
@@ -311,7 +311,7 @@ new Splide( '#s' ).mount( { SlideNumber } );
 
 With the ESM build you can use `EventInterface( Splide )` instead; its `on`/`bind` handlers are cleaned up on destroy. With the classic script, `splide.event.bind( target, 'click', fn )` does the same job; it's public in the typings and also cleaned up on destroy.
 
-- Lifecycle: optional `setup()` (right after construction, before any `mount`), then `mount()`, then `destroy( completely )`. Components are destroyed in reverse order.
+- Lifecycle: optional `setup()` (right after construction, before any `mount`), then `mount()`, then `destroy( completely )`. Components are destroyed in reverse order. An extension's `mount()` runs after every built-in component, so it misses the mount-time `resized`, `overflow`, `arrows:mounted`, `pagination:mounted`, `navigation:mounted` and `autoplay:play`; register those in `setup()`.
 - An extension with a core component's name (e.g. `Keyboard`) **replaces** that built-in. A `Transition` key inside the extensions object is ignored; only `mount()`'s second argument sets the transition.
 - A `destroy: true` breakpoint cycle permanently drops `splide.on` handlers registered outside extensions, and the index resets to `start` on remount. Re-bind and restore the index in an extension (`setup()`).
 - Lifecycle details, the helper APIs (EventInterface, EventBinder, RequestInterval, State, Throttle) and tested examples in both ESM and classic form: `references/custom-extensions.md`.
@@ -346,7 +346,9 @@ Load core first, then each extension's classic script. Each one registers itself
 - Prefer `mount( { AutoScroll } )` over `mount( window.splide.Extensions )`. The latter turns on every loaded extension for that carousel: AutoScroll starts unless `autoScroll: false`, and URLHash clears an existing `#fragment`.
 - **Never write a top-level `var splide = …`.** It overwrites the `window.splide` namespace, so `window.splide.Extensions` becomes `undefined`. Use `const`/`let`, or another name.
 - Video: the YouTube IFrame API is fetched at mount from `//www.youtube.com/player_api` (so it fails on `file://`), and the Vimeo player is bundled. Docs-only `.splide--has-video` is never added. `volume` isn't applied to Vimeo.
-- Intersection: the documented "autoplay only in view" pattern is `autoplay: 'pause', intersection: { inView: { autoplay: true }, outView: { autoplay: false } }`. But it calls `Autoplay.play()` whenever `autoplay` is truthy (including `'pause'`), which overrides the user's pause toggle and reduced motion. For WCAG-strict sites, use the plain `IntersectionObserver` recipe in `references/autoplay.md`. Its `keyboard` toggling does nothing unless `keyboard` is set.
+- Intersection: the documented "autoplay only in view" pattern is `autoplay: 'pause', intersection: { inView: { autoplay: true }, outView: { autoplay: false } }`. But it calls `Autoplay.play()` whenever `autoplay` is truthy (including `'pause'`), which overrides the user's pause toggle and reduced motion. For WCAG-strict sites, use the plain `IntersectionObserver` recipe in `references/autoplay.md`. Its `keyboard` toggling does nothing unless `keyboard` is set. Don't pass `root` as an element in the constructor options: the option merge copies it into a plain object and `mount()` throws. Set `splide.options.intersection.root = el` after the constructor.
+- Video: `destroy()` throws when an HTML video slide never played, leaving the carousel half destroyed. Mount the `SafeVideo` wrapper from `references/extensions/video.md` under the key `Video` if carousels get destroyed. The docs' Vimeo ID `215334213` no longer exists; the references use `76979871`.
+- Auto Scroll: `Components.AutoScroll.play()` throws when the scroller isn't mounted (`type: 'fade'` or `autoScroll: false`).
 - AMD pages (RequireJS/Magento): neither `window.Splide` nor `window.splide` is set. The workaround is in `references/extensions/cdn.md`.
 
 ## Accessibility checklist
@@ -356,14 +358,14 @@ Full ARIA map and what Splide does not handle: `references/accessibility.md`.
 - Every carousel has `aria-label` or `aria-labelledby` (or the `label` option); use `role="group"` if it's decorative.
 - Autoplay → include the `splide__toggle` play/pause button (WCAG 2.2.2). Don't rely on autoplay alone; it's paused under reduced motion.
 - Visible focus styles: the themes include them; with core CSS use `.splide.is-focus-in .splide__arrow:focus`.
-- Elements with `tabindex="0"`, `video[controls]` and `summary` inside slides aren't managed automatically. Extend `focusableNodes`, or toggle them on `visible`/`hidden`.
+- Elements with `tabindex="0"`, `video[controls]` and `summary` inside slides aren't managed automatically. Extend `focusableNodes`, or toggle them on `visible`/`hidden` plus an initial pass on `ready` (slides that start hidden never fire `hidden`).
 - Translate the i18n strings on non-English sites, and prefer content-specific labels. The `first` label goes on the *next* arrow and `last` on the *prev* arrow when they wrap (the docs have these swapped).
 - `destroy` in a breakpoint leaves `tabindex="-1"` on links and buttons that were in hidden slides. Use the fix extension in `references/accessibility.md`.
 
 ## Pitfalls
 
-- Listeners for `mounted`/`*:mounted` registered after `mount()` never fire.
-- `sync()` must run before both `mount()` calls. Mount the **main** carousel before the `isNavigation` one, or the thumbnails get no `role="button"`, `aria-label` or `aria-controls`. The navigation carousel needs `pagination: false`.
+- Listeners for `mounted`/`*:mounted` registered after `mount()` miss the first emission. `mounted` and `ready` never fire again; `arrows:mounted` fires again after each `splide.options` update, and `pagination:mounted` after each update or `refresh()`.
+- Call `sync()` before both `mount()` calls (the documented order; calling it once both are mounted and idle also works, because it remounts the Sync component). Mount the **main** carousel before the `isNavigation` one, or the thumbnails get no `role="button"`, `aria-label` or `aria-controls`. The navigation carousel needs `pagination: false`.
 - 4.1.4 bug: `refresh()`, `add()`, `remove()` or a `direction` breakpoint removes the thumbnails' a11y attributes. After `mount()`, register `thumbs.on( 'refresh', () => thumbs.emit( 'navigation:mounted', thumbs.splides ) )`.
 - Don't name a custom progress bar `splide__progress__bar`; Splide takes it over as the autoplay timer bar.
 - `autoWidth` + `lazyLoad` needs explicit slide widths.
@@ -381,6 +383,11 @@ Full ARIA map and what Splide does not handle: `references/accessibility.md`.
 - `shifted` and `slide:keydown` became internal in 4.1 (`'sh'`, `'sk'`), so listeners using the old names never fire.
 - `EventInterface`, `EVENT_*` and `CLASS_*` are `undefined` with the classic script. Use string event names, or the ESM build.
 - An inline init script that runs before a `defer`red core script throws `Splide is not defined`. Wrap it in `DOMContentLoaded`.
+- Options are deep-merged: DOM elements, `Date`s and class instances become plain-object copies (pass a selector or a function), and an explicit `undefined` replaces the default (`perPage: undefined` freezes the carousel, `i18n: undefined` throws at mount).
+- `splide.options = { ... }` also overrides the matching breakpoint's values (and reduced motion's `speed`) until the next media query change.
+- Don't call `go()` while a `destroy: true` breakpoint has the carousel destroyed: the state goes back to `IDLE` and the breakpoint never remounts it. Check `splide.state.is( Splide.STATES.DESTROYED )` first.
+- Don't call `refresh()` during a move: the list loses its transition, `moved` never fires and the state stays `MOVING` until the next move.
+- With `type: 'fade'`, `moved` fires on the next tick, while the fade is still running.
 
 ## Reference index
 

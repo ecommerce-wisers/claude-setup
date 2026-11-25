@@ -1201,7 +1201,7 @@ Splide.defaults = {
 ```
 
 - Splide uses these as defaults and overrides them with the constructor and data-attribute options.
-- Source: `Splide.defaults` starts as an empty object `{}`. The built-in defaults are the internal `DEFAULTS`: not reachable from the classic script, and exported as `DEFAULTS` only by `splide.esm.js`.
+- Source: `Splide.defaults` starts as an empty object `{}`. The built-in defaults are the internal `DEFAULTS`: not reachable from the classic script, and exported as `DEFAULTS` only by the module builds (`splide.esm.js`, `splide.cjs.js`).
 - Set `Splide.defaults` (or `Splide.defaults.x = …`) **before** calling `new Splide()`. It's read in the constructor.
 
 **Precedence.** Source, `core/Splide/Splide.ts` constructor (simplified):
@@ -1229,10 +1229,10 @@ Then, at runtime:
 6. matching `breakpoints`, in sorted order
 7. `reducedMotion` when the user prefers reduced motion
 
-`splide.options = { … }` (after mount) changes the base layer, i.e. 1–5. While a breakpoint matches, its values still win over the setter on shared keys.
+`splide.options = { … }` (after mount) changes the base layer, i.e. 1–5, and also writes the same values onto the current options. So on shared keys the setter overrides a matching breakpoint (and `reducedMotion`: `speed` comes back while reduced motion is on) until the next media query change merges them again. Tested: `perPage: 4` with `1400: { perPage: 2 }` at 1280px gives 2; `splide.options = { perPage: 3 }` then gives 3; crossing 1400px and coming back gives 2 again.
 
 - `merge()` is **deep** for plain objects: `breakpoints`, `classes`, `i18n`, `reducedMotion`, object `padding` and `dragMinThreshold` merge key by key across all layers.
-- Arrays are copied. Strings, numbers, booleans and functions are replaced.
+- Arrays are copied. Strings, numbers, booleans, functions and `undefined` are replaced, so `{ perPage: undefined }` overrides the default `1` (the carousel then can't move) and `{ i18n: undefined }` throws at mount.
 - `splide.options` (getter) returns the live options object with the effective values.
 
 ---

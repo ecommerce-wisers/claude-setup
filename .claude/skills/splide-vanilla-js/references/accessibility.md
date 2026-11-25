@@ -304,7 +304,9 @@ The default theme's rules, for reference (from `dist/css/splide.min.css`, 4.1.4)
 .splide__pagination__page:focus-visible,
 .splide__toggle:focus-visible { outline: 3px solid #0bf; outline-offset: 3px; }
 .splide.is-focus-in .splide__arrow:focus,
-.splide.is-focus-in .splide__pagination__page:focus { outline: 3px solid #0bf; outline-offset: 3px; }
+.splide.is-focus-in .splide__pagination__page:focus,
+.splide.is-focus-in .splide__toggle:focus { outline: 3px solid #0bf; outline-offset: 3px; }
+.splide__slide:focus { outline: 0; }
 @supports (outline-offset: -3px) {
   .splide__slide:focus-visible,
   .splide.is-focus-in .splide__slide:focus { outline: 3px solid #0bf; outline-offset: -3px; }
@@ -349,20 +351,24 @@ new Splide( '.splide', {
 } ).mount();
 ```
 
-`focusableNodes` cannot handle `tabindex="0"`, because that value has to be restored when the slide becomes visible again. **(source)** Splide removes the `tabindex` attribute from matched elements when their slide becomes visible, so a `[tabindex]` selector would leave those elements unfocusable. Toggle such elements yourself with the `visible` and `hidden` events. Register the handlers before `mount()` so they also see the initial state:
+`focusableNodes` cannot handle `tabindex="0"`, because that value has to be restored when the slide becomes visible again. **(source)** Splide removes the `tabindex` attribute from matched elements when their slide becomes visible, so a `[tabindex]` selector would leave those elements unfocusable. Toggle such elements yourself with the `visible` and `hidden` events. Slides that start out of view never fire `hidden` (tested), so also set the initial state on `ready`:
 
 ```js
 var splide = new Splide( '.splide' );
 
-splide.on( 'hidden', function ( Slide ) {
-  Slide.slide.querySelectorAll( '[data-focusable]' ).forEach( function ( el ) {
-    el.setAttribute( 'tabindex', '-1' );
+function setFocusable( slide, focusable ) {
+  slide.querySelectorAll( '[data-focusable]' ).forEach( function ( el ) {
+    el.setAttribute( 'tabindex', focusable ? '0' : '-1' );
   } );
-} );
+}
 
-splide.on( 'visible', function ( Slide ) {
-  Slide.slide.querySelectorAll( '[data-focusable]' ).forEach( function ( el ) {
-    el.setAttribute( 'tabindex', '0' );
+splide.on( 'visible', function ( Slide ) { setFocusable( Slide.slide, true ); } );
+splide.on( 'hidden', function ( Slide ) { setFocusable( Slide.slide, false ); } );
+
+// Slides that start out of view never fire `hidden`, so set the initial state on `ready`.
+splide.on( 'ready', function () {
+  splide.Components.Slides.forEach( function ( Slide ) {
+    setFocusable( Slide.slide, Slide.slide.classList.contains( 'is-visible' ) );
   } );
 } );
 
@@ -538,7 +544,7 @@ Give the root a stable `id` if anything references slide IDs, such as `aria-cont
 <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
 <script>
   new Splide( '#featured', {
-    perPage : 3,
+    perPage : 2,
     autoplay: true,
     breakpoints: { 640: { perPage: 1 } },
   } ).mount();
@@ -550,6 +556,7 @@ This works without extra JS because:
 - `<section>` with `aria-labelledby` is a named `region`, so Splide adds no `role`.
 - Each slide has a content-based `aria-label`, which Splide keeps instead of "1 of 3".
 - The visible toggle texts "Start" and "Pause" appear inside Splide's labels "Start autoplay" and "Pause autoplay", which satisfies WCAG 2.5.3 Label in Name. If you rename the visible texts, change `i18n.play` and `i18n.pause` to match.
+- **(source)** `perPage` is lower than the slide count. Autoplay only starts when there are more slides than `perPage` (`Slides.isEnough()`). Otherwise nothing plays, yet the toggle still shows the "Pause autoplay" state, and after one click it is stuck on "Start autoplay" (tested with `perPage: 3` and three slides).
 
 ## What destroy() does to attributes
 
@@ -562,6 +569,7 @@ From source (`Elements.ts`, `Slide.ts`, `Arrows.ts`, `Pagination.ts`, `Live.ts`)
 | Slides | Lose status classes and all of the attributes above. Original `style` and HTML `aria-label` restored | Same |
 | Arrows | Generated arrows are removed. HTML arrows lose all of the attributes above, including your own `aria-label` | Same |
 | Pagination | Generated `<ul>` is removed. With an HTML placeholder, only its children are removed | Same |
+| Toggle button | Keeps `aria-controls`, `aria-label` and `is-active`: Autoplay's `destroy()` only cancels the timer (tested) | Same |
 
 `splide.destroy()` with no argument means `completely = true`.
 
@@ -600,7 +608,7 @@ From the docs:
 6. Do not rely on autoplay alone to move slides. Keep arrows, pagination or drag available, because reduced motion pauses autoplay.
 7. Without a theme, add focus styles with `:focus-visible`, plus `.splide.is-focus-in ...:focus` as a fallback.
 8. If slides contain `<area>`, `<audio controls>`, `<video controls>`, `<summary>` or `[contenteditable]`, extend `focusableNodes`.
-9. Handle elements with `tabindex="0"` inside slides yourself, via the `visible` and `hidden` events.
+9. Handle elements with `tabindex="0"` inside slides yourself, via the `visible` and `hidden` events plus an initial pass on `ready`.
 10. With `isNavigation: true`, set `pagination: false`. Otherwise roles and ARIA attributes get mixed up.
 11. If breakpoints destroy the carousel, change `label` in that breakpoint so it does not say "carousel" or "slider".
 12. Keep `paginationKeyboard: true`, which the W3C pattern requires. Turn on `keyboard` only if you want the extra arrow-key shortcuts.

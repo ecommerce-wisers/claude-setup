@@ -97,7 +97,7 @@ The same through options: `new Splide( '.splide', { role: 'group' } )` (takes ef
 | Element | Class | Required | Placement rule (from source) | Recommended tag |
 |---|---|---|---|---|
 | Root | `splide` | yes | The constructor target | `<section>` or `<div>` |
-| Track | `splide__track` | yes | Anywhere inside the root, found with `root.querySelector( '.splide__track' )`. The first match that isn't in a nested carousel is used. | `<div>` |
+| Track | `splide__track` | yes | Anywhere inside the root, found with `root.querySelector( '.splide__track' )`. Only the first match is checked, and it must not belong to a nested carousel. | `<div>` |
 | List | `splide__list` | yes | **Direct child** of the track | `<ul>` or `<div>` |
 | Slide | `splide__slide` | yes (0 slides is allowed, but nothing shows) | **Direct children** of the list. Only children with the class count. | `<li>` or `<div>` |
 | Slide container | `splide__slide__container` | no | **Direct child** of a slide | `<div>` |
@@ -111,6 +111,8 @@ The same through options: `new Splide( '.splide', { role: 'group' } )` (takes ef
 | Lazy spinner | `splide__spinner` | no (auto-created) | Sibling of a lazy `<img>` (same parent) | `<span>` |
 
 Splide looks up the arrows wrapper, prev/next arrows, pagination placeholder, progress bar and toggle anywhere in the root with `querySelector`. It keeps an element only if `element.closest( '.splide' ) === root`, so controls inside a **nested** carousel are ignored. The track lookup works the same way.
+
+Only the **first** match is checked. If it belongs to a nested carousel, Splide treats the element as missing and doesn't look further. Verified: with a nested carousel mounted before its parent, the parent's `.splide__arrows` and `.splide__pagination` placeholders placed after the track stayed empty, and the parent generated new arrows and pagination, because the nested carousel's generated controls came first in document order. Put the parent's own controls before its track, or mount the parent first (`querySelectorAll( '.splide' )` order does this).
 
 ---
 
@@ -710,7 +712,7 @@ CSS can't override these without `!important`. Change the options instead.
 - Generated arrows, generated pagination and clones are removed. A pagination placeholder is emptied. Custom arrows stay, minus managed attributes.
 - All Splide event handlers are removed.
 
-Re-add the root label after a complete destroy if the markup stays on the page (for example with `destroy: true` in a breakpoint, use `role="group"` / `aria-label` again, or remount).
+Re-add the root label after a complete destroy if the markup stays on the page (for example with `destroy: 'completely'` in a breakpoint, use `role="group"` / `aria-label` again, or remount). `destroy: true` in a breakpoint calls `destroy( false )`, which keeps the label and role (verified: `aria-label` and `role="region"` stayed, `aria-roledescription` was removed).
 
 ---
 

@@ -95,7 +95,7 @@ new Splide( '.splide', {
 Related settings outside the `autoScroll` object:
 
 - `autoScroll: false` disables the extension for that carousel. Setting it at runtime (`splide.options = { autoScroll: false }`, or inside `breakpoints`) destroys the scroller. Setting it back to an object mounts it again.
-- `splide.options = { autoScroll: { speed: 3 } }` merges into the current values on the `updated` event, and the new speed applies right away. The hover, focus and toggle listeners are bound only on the first mount, so changing `pauseOnHover`, `pauseOnFocus` or `useToggleButton` later has no effect.
+- `splide.options = { autoScroll: { speed: 3 } }` merges into the current values on the `updated` event, and the new speed applies right away. The hover, focus and toggle listeners are bound only when the scroller mounts (at `mount()`, or when it is turned back on after `autoScroll: false`), so changing `pauseOnHover`, `pauseOnFocus` or `useToggleButton` while it runs has no effect.
 - i18n keys (in the core `i18n` option) for the toggle's `aria-label`: `startScroll` (default `"Start auto scroll"`) and `pauseScroll` (default `"Pause auto scroll"`).
 
 ## Methods
@@ -104,7 +104,7 @@ The component is at `splide.Components.AutoScroll`, under the key you passed to 
 
 | Method | Signature | Description |
 |---|---|---|
-| `play()` | `play(): void` | Starts scrolling, or resumes it. It also clears the hover and focus pause flags and disables the ARIA live region while scrolling (`Components.Live.disable( true )`). |
+| `play()` | `play(): void` | Starts scrolling, or resumes it. It also clears the hover and focus pause flags and disables the ARIA live region while scrolling (`Components.Live.disable( true )`). When the scroller is not mounted (`type: 'fade'`, or `autoScroll: false`), it throws a `TypeError` (checked), so guard the call. |
 | `pause()` | `pause(): void` | Pauses auto scroll and marks it as stopped. After a manual `pause()`, leaving the carousel with the mouse or ending a drag does not resume it; only `play()` does. It also turns the live region back on. |
 | `isPaused()` | `isPaused(): boolean` | Returns `true` if auto scroll is paused, otherwise `false`. It also returns `true` when the scroller never mounted (`type: 'fade'` or `autoScroll: false`). |
 

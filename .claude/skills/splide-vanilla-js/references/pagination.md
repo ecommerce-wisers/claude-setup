@@ -45,7 +45,7 @@ The examples use the global `Splide` and string event names. No ESM import is ne
 | `i18n.slideX` | `string` | `'Go to slide %s'` | Dot label when `focus` is set or `perPage` is 1. |
 | `i18n.pageX` | `string` | `'Go to page %s'` | Dot label when `perPage > 1` and `focus` is not set. |
 | `focus` | `number \| 'center'` | `undefined` | Any defined value, `0` included, switches to one dot per slide ([No paging](#no-paging-one-dot-per-slide)). |
-| `omitEnd` | `boolean` | `false` | Since v4.1.0. Omits dots that would only change the active slide without moving the carousel, and disables the next arrow at the end. Needs `type: 'slide'` (or unset) and `focus`. |
+| `omitEnd` | `boolean` | `false` | Since v4.1.0. Omits dots that would only change the active slide without moving the carousel, and disables the next arrow at the end. Docs say it needs `type: 'slide'` (or unset) and `focus`. Source says: without `focus` it still trims the end index, so the next arrow is disabled at the end, but the dot count ignores it (tested: 9 `autoWidth` slides gave 9 dots without `focus`, 6 with `focus: 0`). |
 
 ## Generated markup and ARIA
 
@@ -148,7 +148,7 @@ var count    = hasFocus ? Controller.getEnd() + 1 : Math.ceil( splide.length / o
 - `splide.length` counts real slides; clones are excluded.
 - `perMove` does not change the number of dots. Dots follow `perPage` (or `focus`). Nine slides with `perPage: 3, perMove: 1` still give 3 dots.
 - Clicking dot `i` calls `go( '>' + i )`. That moves to slide index `clamp( perPage * i, 0, endIndex )`, or to index `i` when `focus` is set.
-- End index without `focus`: `length - perPage`, so the last dot of a partial page aligns the last slides to the end. With `focus`: `length - 1`, or fewer with `omitEnd`.
+- End index without `focus`: `length - perPage` (`length - 1` in a loop with `perMove`), so the last dot of a partial page aligns the last slides to the end. With `focus`: `length - 1`, or fewer with `omitEnd`.
 - The active dot is `Controller.toPage( splide.index )`. Without `focus` that is `Math.floor( ( index >= endIndex ? length - 1 : index ) / perPage )`; with `focus` it is `Math.min( index, endIndex )`.
 - The pagination is rebuilt on `updated` (breakpoints, `splide.options = ...`), on `refresh` (including `add()` and `remove()`), and when a resize changes the end index (`autoWidth` / `fixedWidth`). `pagination:mounted` fires again after each rebuild.
 
@@ -400,7 +400,7 @@ The handlers are registered after `mount()` so they run after Controller has rec
 
 ## Styling
 
-### Core CSS (`splide-core.min.css`, verbatim)
+### Core CSS (`splide-core.min.css`, verbatim without the `-ms-` prefixed declarations)
 
 ```css
 .splide__pagination{align-items:center;display:flex;flex-wrap:wrap;justify-content:center;margin:0;pointer-events:none}
@@ -410,7 +410,7 @@ The handlers are registered after `mount()` so they run after Controller has rec
 
 The `<ul>` has `pointer-events: none` and only the `<li>` items receive clicks. Keep that in mind if you put a background or a click target on the list.
 
-### Theme CSS (`splide.min.css` 4.1.4, verbatim)
+### Theme CSS (`splide.min.css` 4.1.4, verbatim without the `-ms-` prefixed declarations)
 
 ```css
 .splide__pagination{bottom:.5em;left:0;padding:0 1em;position:absolute;right:0;z-index:1}

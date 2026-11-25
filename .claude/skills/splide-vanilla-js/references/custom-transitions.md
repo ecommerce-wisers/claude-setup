@@ -133,7 +133,7 @@ function cancel() {
   - `Controller.scroll()` and `Scroll.scroll()`: `drag: 'free'` releases scroll directly and emit `scroll`/`scrolled`, not `move`/`moved`.
   - Dragging itself, which calls `Move.translate()` on every pointer move.
 - `start()` may be called again before the previous `done` has run. With the default `waitForTransition: false`, `Controller.go()` doesn't wait. The new call **replaces** the old one, and the old `done` must not run.
-- `Arrows` call `Controller.go( control, true )` and non-free drag releases call `Controller.go( toDest( position ), true )`. `allowSameIndex = true` means `start()` can be asked to go to the index it is already at.
+- `Arrows` call `Controller.go( control, true )`, pagination clicks call `Controller.go( '>' + page, true )`, and non-free drag releases call `Controller.go( toDest( position ), true )`. `allowSameIndex = true` means `start()` can be asked to go to the index it is already at.
 
 Helpers you will use from `Components.Move`:
 

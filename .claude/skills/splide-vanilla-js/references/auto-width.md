@@ -31,7 +31,7 @@ The examples use the global `Splide`. No ESM import is needed.
 | `autoWidth` | `boolean` | `false` | If `true`, each slide's width is determined by the slide itself. Leave out `perPage` and `perMove`, or set them to `1`. With `lazyLoad`, make sure each slide has an explicit width. |
 | `autoHeight` | `boolean` | `false` | If `true`, each slide's height is determined by the slide itself. This is the vertical (`direction: 'ttb'`) counterpart of `autoWidth`. Leave out `perPage` and `perMove`, or set them to `1`. With `lazyLoad`, make sure each slide has an explicit height. |
 | `focus` | `number \| 'center'` | `undefined` | Common with `autoWidth`: `'center'` for a centred loop, and `0` together with `omitEnd`. |
-| `omitEnd` | `boolean` | `false` | Since v4.1.0. Disables the next arrow on the last page and omits redundant dots. Needs `type: 'slide'` (or unset) and `focus`. |
+| `omitEnd` | `boolean` | `false` | Since v4.1.0. Disables the next arrow on the last page and omits redundant dots. Docs say it needs `type: 'slide'` (or unset) and `focus`. Source: without `focus` the next arrow is still disabled at the end, but the dots are not omitted. |
 | `perPage` / `perMove` | `number` | `1` / `undefined` | Must stay `1` / unset with `autoWidth` or `autoHeight`. |
 
 ## What Splide does with autoWidth

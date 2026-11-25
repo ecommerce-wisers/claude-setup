@@ -61,7 +61,7 @@ Assign a video to a slide with one of these attributes. The value can be a URL o
 |---|---|
 | `data-splide-html-video` | Path or URL of a video file. It becomes the `src` of a `<video>`. |
 | `data-splide-youtube` | A YouTube video ID (`cdz__ojQOuU`) or a URL with a `v=` query parameter (`https://www.youtube.com/watch?v=cdz__ojQOuU`). Embed URLs and short URLs are not accepted (see [Caveats](#caveats)). |
-| `data-splide-vimeo` | A numeric Vimeo ID (`215334213`) or a `vimeo.com` URL (`https://vimeo.com/215334213`). |
+| `data-splide-vimeo` | A numeric Vimeo ID (`76979871`) or a `vimeo.com` URL (`https://vimeo.com/76979871`). |
 
 ```html
 <div class="splide">
@@ -73,7 +73,7 @@ Assign a video to a slide with one of these attributes. The value can be a URL o
       <li class="splide__slide" data-splide-youtube="https://www.youtube.com/watch?v=cdz__ojQOuU">
         <img src="preview02.jpg">
       </li>
-      <li class="splide__slide" data-splide-vimeo="https://vimeo.com/215334213">
+      <li class="splide__slide" data-splide-vimeo="https://vimeo.com/76979871">
         <img src="preview03.jpg">
       </li>
     </ul>
@@ -237,8 +237,8 @@ These are also in the source:
 - Clicking a slide that has a video (or its container) toggles play/pause, and the button is part of that area. Other videos on the same carousel pause.
 - A playing video pauses on `move` and `scroll`, and on the first `dragging` after a `drag`. With `autoplay`, the active slide's video starts again after `moved` or `scrolled`.
 - On a play request, the button hides and the player wrapper shows. On pause (including the automatic pause on move), the wrapper is hidden but not destroyed, so the preview image and button come back. The next play resumes from the same position.
-- After `refresh`, for example after `splide.add()`, new slides that have video attributes get players.
-- With `type: 'loop'`, clones copy the data attribute and get their own players.
+- After `refresh`, for example after `splide.add()`, new slides that have video attributes get players. `Video.play( index )` (and so Intersection's `video: true`) still uses the index each slide had when its player was created (`video.autoplay` is not affected; it compares slide elements). Checked: after `add( slide, 0 )` on two video slides, `play( 1 )` played the slide now at index 2, and `play( 2 )` played nothing. Appending at the end keeps the indexes; otherwise destroy and mount again.
+- With `type: 'loop'`, clones copy the data attribute and get their own players. This holds only for the clones made at mount. Clones rebuilt later (by `refresh()`, or a breakpoint that changes the clone count) copy the already-initialized slide, including `splide__slide--has-video` and its overlay, so the extension skips them: they show the play button but get no player, and clicking them does nothing (checked).
 - The options are read when each player is created (mount or refresh). Changing `splide.options = { video: ... }` later doesn't affect existing players.
 
 ## Examples
@@ -267,7 +267,7 @@ Serve this page over `http://` or `https://`, not `file://` (see [Caveats](#cave
         <li class="splide__slide" data-splide-youtube="3GNQL3alB-Y">
           <img src="https://img.youtube.com/vi/3GNQL3alB-Y/hqdefault.jpg" alt="Sample video 2">
         </li>
-        <li class="splide__slide" data-splide-vimeo="https://vimeo.com/215334213">
+        <li class="splide__slide" data-splide-vimeo="https://vimeo.com/76979871">
           <img src="preview-vimeo.jpg" alt="Sample video 3">
         </li>
         <li class="splide__slide" data-splide-html-video="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4">
@@ -299,7 +299,7 @@ Serve this page over `http://` or `https://`, not `file://` (see [Caveats](#cave
 </html>
 ```
 
-The official demo also uses `lazyLoad: 'nearby'` with `<img data-splide-lazy="https://img.youtube.com/vi/<id>/hqdefault.jpg">` previews and `classes: { slide: 'splide__slide splide__slide--image' }` (a site-specific class).
+The docs and demo use the Vimeo video `215334213`, which no longer exists: Vimeo's oEmbed API returns 404 for it, and the slide fires `video:error` (checked 2026-11-25). The examples here use `76979871` (Vimeo's own sample video), which loads. The official demo also uses `lazyLoad: 'nearby'` with `<img data-splide-lazy="https://img.youtube.com/vi/<id>/hqdefault.jpg">` previews and `classes: { slide: 'splide__slide splide__slide--image' }` (a site-specific class).
 
 ### Video in part of the slide, muted autoplay, custom HTML video options
 
@@ -364,9 +364,37 @@ document.querySelector( '#lock' ).addEventListener( 'change', function ( e ) {
 - **`file://` breaks YouTube.** The API script URL is built as `location.protocol + '//www.youtube.com/player_api'`, which becomes `file://www.youtube.com/...`. Test on a local server (`http://localhost`).
 - **Give slides a size.** `.splide__video` is absolutely positioned at 100% of the slide or container. Set `heightRatio` (for example `0.5625` for 16:9), `height` or `fixedHeight`, or size the slide or container in CSS.
 - **Autoplay policies.** `video.autoplay` and Intersection's `inView: { video: true }` start playback without a user gesture. Browsers block that unless the video is muted, so set `video.mute: true`.
-- **Vimeo.** Hiding the controls requires the video owner to have a PRO account. When the script loads, the bundled Vimeo library also turns any `[data-vimeo-id]` / `[data-vimeo-url]` elements elsewhere on the page into Vimeo players, and it adds a `message` listener that resizes Vimeo embeds.
+- **Vimeo.** Hiding the controls requires the video owner to have a PRO account. When the script loads, the bundled Vimeo library also turns any `[data-vimeo-id]` / `[data-vimeo-url]` elements elsewhere on the page into Vimeo players, and it adds a `message` listener that resizes Vimeo embeds. An unknown Vimeo ID or URL fires `video:error`, and the Vimeo library also reports an uncaught promise rejection (`"<url>" was not found.`) in the console (checked).
 - **Global names from the classic script.** `splide-extension-video.min.js` declares top-level `St`, `qt` and `e` and assigns a top-level `t`, which overwrites page globals with those names (core `splide.min.js` also assigns `t`). It also sets `window.VimeoPlayerResizeEmbeds_` and `window.VimeoSeoMetadataAppended`. The unminified `splide-extension-video.js` declares `_assertThisInitialized`, `_inheritsLoose` and `_setPrototypeOf` instead. If page scripts depend on a global `e` or `t`, use the ESM build, which runs in module scope.
 - `disable( true )` also stops the automatic pause on move, so a video that is already playing keeps playing while the user changes slides.
-- With the Grid extension, data attributes on the grid cells are not seen. Video reads the attribute only from real slides (the pages Grid generates).
+- **`destroy()` throws when an HTML video never played.** The `<video>` element is created on the first play, but the HTML player's `destroy()` reads it unconditionally, so `splide.destroy()` throws `TypeError: Cannot read properties of undefined (reading 'addEventListener')` and leaves the carousel half destroyed: later players keep their overlay, and the core components are not destroyed (checked; a never-played YouTube slide and a played HTML video destroy cleanly, and Vimeo uses the same base `destroy()` as YouTube). If you destroy carousels (page transitions, re-initialization), mount this wrapper under the key `Video` instead (checked: no error, overlays and classes removed, mounting again on the same element works):
+
+  ```js
+  function SafeVideo( Splide, Components, options ) {
+    var video = window.splide.Extensions.Video( Splide, Components, options );
+    var destroy = video.destroy;
+
+    video.destroy = function () {
+      video.disable( true ); // players that destroy() skips then ignore clicks
+      try {
+        destroy();
+      } catch ( e ) {
+        // Finish the cleanup that the error interrupted.
+        Splide.root.querySelectorAll( '.splide__video' ).forEach( function ( el ) {
+          el.remove();
+        } );
+        Splide.root.querySelectorAll( '.splide__slide--has-video, .splide__slide__container--has-video' ).forEach( function ( el ) {
+          el.classList.remove( 'splide__slide--has-video', 'splide__slide__container--has-video' );
+        } );
+      }
+      Splide.root.classList.remove( 'is-video-disabled', 'is-playing' );
+    };
+
+    return video;
+  }
+
+  videos.mount( { Video: SafeVideo } ); // keep the key `Video`
+  ```
+- With the Grid extension, the result depends on the mount order. Video reads the attributes from the slides that exist when it mounts. With `{ Grid, Video }` it sees only the pages Grid generates, so attributes on the grid cells are ignored. With `{ Video, Grid }` it creates players on the original slides before Grid moves them into cells, and clicking a cell plays its video (checked), but `Video.play( index )` no longer reaches those players, because Grid's pages take over the indexes.
 - Don't write `var splide = new Splide(...)` at the top level of a classic script. That global replaces the `window.splide` namespace, so `window.splide.Extensions` becomes `undefined` (verified). Use `const`/`let`, another name, or a function scope.
 - With an AMD loader on the page (RequireJS), the UMD wrapper calls `define()` instead of setting the global. See `cdn.md`.

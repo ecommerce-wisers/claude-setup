@@ -121,7 +121,7 @@ These events fire inside `mount()`. A handler added after `mount()` misses them.
 | `navigation:mounted` | Emitted while the Sync component mounts, when `isNavigation: true` (docs) |
 | `ready` | **(source)** Emitted at the end of `mount()`, after `mounted` |
 | `overflow` | **(source)** Always emitted once during mount with the initial state, and again on every change. The Overflow guide also says to register it before `mount()` |
-| `resized` | **(source)** Emitted once while Layout mounts |
+| `resized` | **(source)** Emitted while Layout mounts, and again while Clones mounts in a loop carousel |
 | `active`, `visible` | **(source)** Emitted for the initial active and visible slides during `mounted` |
 | `arrows:updated`, `pagination:updated` | **(source)** First emitted during mount, before the matching `*:mounted` |
 | `autoplay:play` | **(source)** Emitted during mount if autoplay starts immediately |
@@ -151,7 +151,7 @@ Splide removes **all** handlers on destroy. If you use the `destroy` option in b
 From source (`Splide.destroy()`, `Media.update()`):
 
 1. Breakpoint `destroy: true` calls `splide.destroy( false )`: components are destroyed, `destroy` is emitted (your handler still runs), then every handler on the bus is removed. Media query listeners are kept.
-2. When the breakpoint stops matching, Media calls `splide.mount()` again. `mount()` reuses the extensions passed the first time, so an extension's `mount()` runs again and can register its handlers again.
+2. When the breakpoint stops matching, Media calls `splide.mount()` again. `mount()` reuses the extensions passed the first time, so an extension's `mount()` runs again and can register its handlers again. An extension's `mount()` runs after every built-in component has mounted, so handlers registered there miss the mount-time `resized`, `overflow`, `arrows:mounted`, `pagination:mounted`, `navigation:mounted` and `autoplay:play` (they still get `mounted` and `ready`). Register those in the extension's `setup()`, which runs before any component mounts (tested).
 3. Breakpoint `destroy: 'completely'`, or `splide.destroy()` / `destroy( true )`, also removes the media query listeners, so nothing remounts.
 4. DOM listeners you added yourself with `addEventListener` are **not** removed. Remove them in the extension's `destroy()`, or use `EventInterface().bind()` (ESM), which is removed automatically.
 
@@ -312,7 +312,7 @@ Fired right after the carousel moves. Same arguments as `move`.
 | `prevIndex` | `number` | The previous slide index |
 | `destIndex` | `number` | The destination slide index. In loop mode it can be negative or greater than the number of slides, because of the clones |
 
-**(source)** Fired when the CSS transition ends (`transitionend` on the list). If the speed is `0`, for example under `prefers-reduced-motion`, or the carousel is already in position, the transition is skipped and `moved` fires **synchronously** right after `move`. With `useScroll: true`, `moved` fires just before `scrolled`.
+**(source)** Fired when the CSS transition ends (`transitionend` on the list). If the speed is `0`, for example under `prefers-reduced-motion`, or the carousel is already in position, the transition is skipped and `moved` fires **synchronously** right after `move`. With `useScroll: true`, `moved` fires just before `scrolled`. With `type: 'fade'`, `moved` fires on the next tick (`setTimeout`), while the opacity transition is still running, whatever the `speed`.
 
 ### `active`
 
@@ -376,7 +376,7 @@ Fired whenever options are updated, for example when a breakpoint starts or stop
 |---|---|---|
 | `options` | `Options` | An object with the latest options |
 
-**(source)** Emitted by `Media.set()`: on breakpoint and `prefers-reduced-motion` media-query changes, and on every `splide.options = {...}` assignment. It is not emitted while the instance is being created or mounted (state `CREATED`). On a breakpoint that destroys the carousel, `updated` fires just before `destroy`.
+**(source)** Emitted by `Media.set()`: on breakpoint and `prefers-reduced-motion` media-query changes, and on every `splide.options = {...}` assignment. Breakpoints and reduced motion applied while the instance is being created or mounted (state `CREATED`) do not emit it. The `options` setter always does, even during `mount()` (for example from an `overflow` handler registered before `mount()`). On a breakpoint that destroys the carousel, `updated` fires just before `destroy`.
 
 ```js
 splide.on( 'updated', function ( options ) {
@@ -418,7 +418,7 @@ Fired right after the user finishes dragging the carousel.
 
 Fired right before Splide scrolls the carousel with the Scroll component. It is not fired for the normal CSS transition; use `move` instead.
 
-**(source)** The Scroll component is used by `drag: 'free'`, by `useScroll: true`, by the bounce-back after over-dragging, and by `Components.Controller.scroll()`. The state becomes `SCROLLING`.
+**(source)** The Scroll component is used by `drag: 'free'` (including its bounce-back when a free scroll runs past the edge), by `useScroll: true`, and by `Components.Controller.scroll()`. The state becomes `SCROLLING`. Over-dragging a normal (`drag: true`) carousel past its edge snaps back with `move`/`moved`, not `scroll`.
 
 ### `scrolled`
 
@@ -691,7 +691,7 @@ From source, in emit order.
 **`mount()`**
 
 1. Components are constructed and set up. Media applies breakpoints and reduced motion; no `updated` is emitted.
-2. Components mount in order: Media, Direction, Elements, Slides, Layout (`resized`, `overflow`), Clones, Move, Controller, Arrows (`arrows:updated`, then `arrows:mounted`), Autoplay (`autoplay:play` if it starts), Cover, Scroll, Drag, Keyboard, LazyLoad, Pagination (`pagination:updated`, then `pagination:mounted`), Sync (`navigation:mounted` if `isNavigation`), Wheel, Live, then extensions, then Transition.
+2. Components mount in order: Media, Direction, Elements, Slides, Layout (`resized`, `overflow`), Clones (`resized` again in loop mode, after generating clones), Move, Controller, Arrows (`arrows:updated`, then `arrows:mounted`), Autoplay (`autoplay:play` if it starts), Cover, Scroll, Drag, Keyboard, LazyLoad, Pagination (`pagination:updated`, then `pagination:mounted`), Sync (`navigation:mounted` if `isNavigation`), Wheel, Live, then extensions, then Transition.
 3. `mounted`. Handlers run in order, and Move's reposition among them emits `active` and `visible` for the initial slides, and Arrows emit `arrows:updated`.
 4. The root gets `is-initialized`, and the state becomes `IDLE`.
 5. `ready`.

@@ -129,7 +129,7 @@ Behaviour (from the source):
 | Lookup | `root.querySelector( '.splide__toggle' )`, excluding nested carousels. It must be inside the root but not inside the track or list. |
 | `aria-controls` | The track id, for example `splide01-track`. Set only when `autoplay` is truthy. |
 | `aria-label` | `i18n.pause` ("Pause autoplay") while autoplay is on; `i18n.play` ("Start autoplay") while it is stopped. |
-| Class `is-active` | Present while autoplay is on, including while it is only paused by hover or focus. Removed when it is stopped: by `autoplay: 'pause'` at start, a toggle click, `Autoplay.pause()`, or reduced motion. |
+| Class `is-active` | Present while autoplay is on, including while it is only paused by hover or focus. Removed when it is stopped: by `autoplay: 'pause'` at start, a toggle click, `Autoplay.pause()`, or reduced motion. With `autoplay: true` and too few slides to play, the toggle still gets `is-active` and "Pause autoplay" although nothing plays (tested: 3 slides, `perPage: 3`). |
 | Click | If stopped, `play()`; otherwise `pause()`, which stops it until `play()` is called again. |
 
 Visibility CSS (core and themes, verbatim):
@@ -225,7 +225,7 @@ Docs say `pause(): void`. Source says `pause( stop = true )`. `pause( false )` i
 |---|---|---|
 | `autoplay:play` | none | When autoplay starts: every successful `play()`, including resumes after hover or focus. |
 | `autoplay:pause` | none | Right after autoplay is paused, including hover and focus pauses. Only fired if it was running. |
-| `autoplay:playing` | `rate: number` | On every animation frame while the timer is ticking. `rate` is the current progress from 0 to 1. |
+| `autoplay:playing` | `rate: number` | On every animation frame while the timer is ticking. `rate` is the current progress from 0 to 1. It also fires once with `0` each time the progress is rewound (`move`, `scroll`, `refresh`), even while autoplay is paused or stopped (tested). |
 
 ```js
 var splide = new Splide( '.splide' );

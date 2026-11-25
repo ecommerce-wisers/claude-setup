@@ -102,6 +102,7 @@ splide.mount();
 - Source: the stored state starts as `undefined`, so `overflow` always fires once during `mount()` with the initial state, `true` or `false`. After that it fires only on changes.
 - The events guide lists no arguments for `overflow` and describes it as fired "by resizing the viewport". Source: it passes `isOverflow`, and also fires on mount, `updated` and `refresh`.
 - The first call happens inside `mount()`, before Arrows, Pagination, Controller and Move have mounted. Setting `splide.options` there is safe: those components read the new values when they mount.
+- In an extension, register the listener in `setup()`. Extensions mount after the core components, so a listener added in the extension's `mount()` misses the first call (tested).
 
 ## `Layout.isOverflow()`
 

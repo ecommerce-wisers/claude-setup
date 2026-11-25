@@ -97,7 +97,7 @@ All options go under `intersection`. The docs list no defaults. When an option i
 |---|---|---|---|
 | `inView` | `IntersectionViewOptions` | not set | Options applied when the carousel enters, or is in, the viewport. |
 | `outView` | `IntersectionViewOptions` | not set | Options applied when the carousel leaves the viewport. It takes the same properties as `inView`. |
-| `root` | `Element \| Document \| null` | not set (the browser viewport) | The element used as the viewport. See MDN "Intersection Observer API: creating an intersection observer". |
+| `root` | `Element \| Document \| null` | not set (the browser viewport) | The element used as the viewport. See MDN "Intersection Observer API: creating an intersection observer". Don't pass an element in the constructor options: Splide's option merge deep-copies every object, so the element turns into a plain object and `mount()` throws `Failed to construct 'IntersectionObserver'` (checked). Set it on `splide.options.intersection.root` after the constructor, as in [Custom root](#custom-root-scrolling-container). |
 | `rootMargin` | `string` | not set (`'0px'`) | Margin around the root element, in CSS margin syntax, for example `'200px'` or `'0px 0px -20% 0px'`. |
 | `threshold` | `number \| number[]` | not set (`0`) | A threshold, or an array of thresholds, as the fraction of the root that must be visible before the observer callback runs. The docs page shows this signature as `gap: { row?, col? }` by mistake; the typings say `number \| number[]`. |
 | `once` | `boolean` | not set (off) | If `true`, the extension stops observing once the carousel becomes visible in the viewport. `outView` is never applied after that. |
@@ -278,16 +278,23 @@ Load the Video CSS and JS from `video.md` for this example.
 ### Custom root (scrolling container)
 
 ```js
-new Splide( '#inside-panel', {
+var panelCarousel = new Splide( '#inside-panel', {
   autoplay    : 'pause',
   intersection: {
-    root     : document.querySelector( '#scroll-panel' ), // must be an ancestor of the carousel
     threshold: [ 0, 0.25, 0.5, 0.75, 1 ],
     inView   : { autoplay: true },
     outView  : { autoplay: false },
   },
-} ).mount( { Intersection: window.splide.Extensions.Intersection } );
+} );
+
+// Set root on the live options after the constructor. Passed to the constructor,
+// the element is deep-copied into a plain object and mount() throws.
+panelCarousel.options.intersection.root = document.querySelector( '#scroll-panel' ); // must be an ancestor of the carousel
+
+panelCarousel.mount( { Intersection: window.splide.Extensions.Intersection } );
 ```
+
+`splide.options` returns the live options object, so this assignment skips the merge. Assigning through the setter (`splide.options = { intersection: { root } }`) merges and copies the element again. Don't define `intersection` inside `breakpoints` either, because a matching breakpoint merges a fresh copy at mount. Checked in Chrome: the first entry reported the panel's bounds (`rootBounds.height` 300) and autoplay started after the panel was scrolled.
 
 With an array of thresholds, the callback, and the `inView` options with it, runs at each crossing while the carousel stays visible.
 
