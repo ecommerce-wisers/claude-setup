@@ -7,13 +7,13 @@ The Claude Code setup we start every project with. Copy it into a new repo or me
 ```
 claude-setup/
 ├── CLAUDE.md            instructions Claude Code loads in every session (a template)
-├── skills-lock.json     the installed skills, each pinned to a source commit
+├── skills-lock.json     the skills.sh skills, each pinned to a source commit
 ├── .gitignore           keeps secrets and local settings out of git
 └── .claude/
     ├── settings.json    project settings; plan-mode plans go to .claude/plans/
     ├── docs/            all project docs
     ├── references/      designs, mockups and explanations supplied for the project
-    └── skills/          49 skills
+    └── skills/          51 skills
 ```
 
 ## CLAUDE.md
@@ -54,7 +54,7 @@ Category: Payments, Hours: 10 hours
 
 ## Skills
 
-49 skills, installed with [skills.sh](https://skills.sh) and listed in `skills-lock.json`.
+51 skills. 49 come from [skills.sh](https://skills.sh) and are listed in `skills-lock.json`. The two Splide skills are our own and live only in this repo.
 
 | Source | Skills | Covers | Licence |
 |---|---|---|---|
@@ -66,8 +66,9 @@ Category: Payments, Hours: 10 hours
 | [vercel-labs/skills](https://github.com/vercel-labs/skills) | 1 | `find-skills` for finding and installing more skills | MIT |
 | [Jeffallan/claude-skills](https://github.com/Jeffallan/claude-skills) | 1 | `php-pro` for modern PHP, Laravel and Symfony | MIT |
 | [multica-ai/andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills) | 1 | `karpathy-guidelines`, the four coding principles | MIT |
+| This repo | 2 | `splide-vanilla-js` (Splide v4 sliders in plain JavaScript from the CDN, for static HTML, PHP, WordPress and Shopify themes, with the Splide files bundled) and `splide-react` (Splide in React and Next.js) | Ours. The bundled Splide files are MIT. |
 
-The Prisma, Better Auth, Shopify, React and PHP skills only matter on those stacks. Remove the ones a project doesn't use with `npx skills remove <name> -y`.
+The Prisma, Better Auth, Shopify, React, PHP and Splide skills only matter on those stacks. Remove the ones a project doesn't use with `npx skills remove <name> -y`.
 
 ## Add it to a project
 
@@ -119,3 +120,5 @@ npx skills add vercel-labs/skills --skill find-skills -a claude-code -y
 npx skills add jeffallan/claude-skills --skill php-pro -a claude-code -y
 npx skills add multica-ai/andrej-karpathy-skills --skill karpathy-guidelines -a claude-code -y
 ```
+
+These commands don't cover the Splide skills, which aren't on skills.sh. Edit them in `.claude/skills/splide-*` directly.

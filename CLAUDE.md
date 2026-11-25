@@ -49,9 +49,9 @@ Add to `MEMORY.md` when you learn something the code doesn't show and the next s
 - Don't add local services (databases, queues, containers) the project doesn't already use unless the task asks for them.
 
 ## Skills
-The skills in `.claude/skills/` are recorded in `skills-lock.json`.
+The skills in `.claude/skills/` are recorded in `skills-lock.json`, apart from the two Splide skills, which are our own and live only in this repo.
 - Start with `using-agent-skills`. It maps a task to its workflow (interview, spec, plan, build, test, review, ship) and to the skill for each step. Follow that skill's steps, including its checks and the points where the user reviews.
-- The stack skills apply only when the project uses that stack: `prisma-*` for Prisma, the Better Auth set (`better-auth-*`, `create-auth`, `email-and-password-best-practices`, `organization-best-practices`, `two-factor-authentication-best-practices`), `shopify` and `ucp` for Shopify, `php-pro` for PHP and `vercel-react-best-practices` for React and Next.js.
+- The stack skills apply only when the project uses that stack: `prisma-*` for Prisma, the Better Auth set (`better-auth-*`, `create-auth`, `email-and-password-best-practices`, `organization-best-practices`, `two-factor-authentication-best-practices`), `shopify` and `ucp` for Shopify, `php-pro` for PHP, `vercel-react-best-practices` for React and Next.js, `splide-vanilla-js` for Splide sliders in plain JavaScript (static HTML, PHP, WordPress and Shopify themes) and `splide-react` for Splide in React and Next.js.
 - When a skill's advice conflicts with this file or `RULES.md`, this file and `RULES.md` win.
 - Add skills at project level, so they land here and in the lock file: `npx skills add <owner/repo> --skill <name> -a claude-code`. Don't use `-g`, which installs for your user account instead of the repo. `npx skills update -p` updates them and `npx skills remove <name> -y` removes one.
 
