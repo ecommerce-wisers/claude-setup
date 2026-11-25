@@ -42,6 +42,7 @@ Every doc goes in `.claude/docs/`, including the ones the skills write (`SPEC.md
 | `DESIGN.md` | The design system: tokens, type, components and UI rules. |
 | `RULES.md` | The project's own rules. Loads in every session. |
 | `MEMORY.md` | Gotchas, quirks and decisions the code doesn't show. Loads in every session. |
+| `PLAN.md` | The project plan: phases, milestones and what comes next. |
 | `TASKS.md` | The record of delivered work and hours. |
 
 They start empty, apart from the header and total in `TASKS.md`. Claude appends one entry per finished task and keeps the total up to date:
